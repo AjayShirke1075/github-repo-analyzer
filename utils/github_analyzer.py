@@ -1,5 +1,4 @@
 from github import Github
-from datetime import datetime
 import os
 
 
@@ -19,16 +18,20 @@ def analyze_repo(repo_url):
     except ValueError:
         raise ValueError("Invalid GitHub repository URL format")
 
-    # ✅ Authenticate GitHub client
+    # ✅ Authenticate GitHub client (fallback to anonymous if no token)
     token = os.getenv("GITHUB_TOKEN")
-    g = Github(token)
+
+    if token:
+        g = Github(token)
+    else:
+        g = Github()   # ✅ public repo access without token
 
     # ✅ Fetch repository
     try:
         repo = g.get_repo(f"{owner}/{repo_name}")
     except Exception as e:
         print("GITHUB ERROR >>>", e)
-        raise ValueError("Unable to access repository")
+        raise ValueError("Unable to access repository (maybe private or wrong URL)")
 
     # ✅ Collect all files
     files = []
@@ -69,12 +72,3 @@ def analyze_repo(repo_url):
     }
 
     return repo_info, files
-
-
-# ✅ ADDED FUNCTION (ONLY ADDITION)
-def get_file_content(repo, path):
-    """
-    Fetch and return decoded content of a file from GitHub repository
-    """
-    file = repo.get_contents(path)
-    return file.decoded_content.decode("utf-8", errors="ignore")

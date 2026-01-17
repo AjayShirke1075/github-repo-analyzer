@@ -1,0 +1,31 @@
+// Repo Structure
+digraph {
+	bgcolor=transparent rankdir=LR
+	ROOT [label=Repository fillcolor="#1e293b" fontcolor=white shape=folder style=filled]
+	".gitignore" [label=".gitignore" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> ".gitignore"
+	"README.md" [label="README.md" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "README.md"
+	"requirements.txt" [label="requirements.txt" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "requirements.txt"
+	"app/streamlit_app.py" [label="app/streamlit_app.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "app/streamlit_app.py"
+	"app/tk_ui.py" [label="app/tk_ui.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "app/tk_ui.py"
+	"src/__init__.py" [label="src/__init__.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/__init__.py"
+	"src/baseline.py" [label="src/baseline.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/baseline.py"
+	"src/explain.py" [label="src/explain.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/explain.py"
+	"src/predict.py" [label="src/predict.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/predict.py"
+	"src/predict_transformer.py" [label="src/predict_transformer.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/predict_transformer.py"
+	"src/preprocess.py" [label="src/preprocess.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/preprocess.py"
+	"src/train_on_hf.py" [label="src/train_on_hf.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/train_on_hf.py"
+	"src/train_transformer.py" [label="src/train_transformer.py" fillcolor="#0f172a" fontcolor=white shape=box style=filled]
+	ROOT -> "src/train_transformer.py"
+}

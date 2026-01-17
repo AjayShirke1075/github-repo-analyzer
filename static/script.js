@@ -73,15 +73,31 @@ function initializeScrollAnimations() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                entry.target.style.transform = 'translateY(0) scale(1)';
+                entry.target.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                 
-                // Stagger animations for child elements
-                const children = entry.target.querySelectorAll('.stat-item, .tech-item');
+                // Stagger animations for child elements with premium easing
+                const children = entry.target.querySelectorAll('.stat-item, .tech-item, li');
                 children.forEach((child, index) => {
+                    child.style.opacity = '0';
+                    child.style.transform = 'translateY(20px) scale(0.95)';
                     setTimeout(() => {
                         child.style.opacity = '1';
-                        child.style.transform = 'translateY(0)';
-                    }, index * 50);
+                        child.style.transform = 'translateY(0) scale(1)';
+                        child.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    }, index * 60);
+                });
+                
+                // Animate images with scale effect
+                const images = entry.target.querySelectorAll('img');
+                images.forEach((img, index) => {
+                    img.style.opacity = '0';
+                    img.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        img.style.opacity = '1';
+                        img.style.transform = 'scale(1)';
+                        img.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    }, index * 100 + 200);
                 });
             }
         });
@@ -118,41 +134,75 @@ function initializeInteractiveElements() {
         });
     }
     
-    // Stat items hover effects
+    // Stat items hover effects with premium animation
     document.querySelectorAll('.stat-item').forEach(item => {
         item.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px) scale(1.02)';
-            this.style.transition = 'all 0.3s ease';
+            this.style.transform = 'translateY(-6px) scale(1.04)';
+            this.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
         });
         
         item.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0) scale(1)';
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         });
     });
     
-    // Tech items pulse animation on hover
+    // Tech items premium animation on hover
     document.querySelectorAll('.tech-item').forEach(item => {
         item.addEventListener('mouseenter', function() {
             const icon = this.querySelector('.tech-icon');
             if (icon) {
-                icon.style.animation = 'float 0.5s ease-in-out';
-                setTimeout(() => {
-                    icon.style.animation = '';
-                }, 500);
+                icon.style.animation = 'float 1s ease-in-out infinite';
+                icon.style.transform = 'scale(1.2) rotate(5deg)';
+            }
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('.tech-icon');
+            if (icon) {
+                icon.style.animation = '';
+                icon.style.transform = 'scale(1) rotate(0deg)';
+                icon.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             }
         });
     });
     
-    // Badge hover effects
+    // Badge premium hover effects
     document.querySelectorAll('.badge').forEach(badge => {
         badge.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1)';
-            this.style.transition = 'transform 0.2s ease';
+            this.style.transform = 'scale(1.15) rotate(2deg)';
+            this.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            this.style.boxShadow = '0 4px 12px rgba(79, 156, 249, 0.4)';
         });
         
         badge.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
+            this.style.transform = 'scale(1) rotate(0deg)';
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            this.style.boxShadow = '';
         });
+    });
+    
+    // Add premium animation to cards on scroll
+    const cardObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0) scale(1)';
+                entry.target.style.filter = 'blur(0px)';
+            } else {
+                entry.target.style.opacity = '0.3';
+                entry.target.style.transform = 'translateY(20px) scale(0.98)';
+                entry.target.style.filter = 'blur(2px)';
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    });
+    
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        cardObserver.observe(card);
     });
 }
 
@@ -340,10 +390,47 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Smooth scroll behavior
+// Smooth scroll behavior with premium easing
 document.documentElement.style.scrollBehavior = 'smooth';
+document.documentElement.style.scrollPaddingTop = '20px';
+
+// Premium page load animation
+window.addEventListener('load', function() {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    
+    setTimeout(() => {
+        document.body.style.opacity = '1';
+        
+        // Animate all cards with staggered entrance
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px) scale(0.95)';
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+                card.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            }, index * 100 + 200);
+        });
+    }, 50);
+});
 
 // Performance optimization: Reduce animations on low-end devices
 if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
     document.body.classList.add('reduce-motion');
 }
+
+// Premium smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});

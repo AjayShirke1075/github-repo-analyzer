@@ -29,46 +29,20 @@
             </p>
         </header>
 
-        <!-- FORM (IMPORTANT: everything is inside ONE form) -->
+        <!-- FORM -->
         <section class="form-section">
             <form method="POST" id="analyzeForm">
 
                 <!-- Repo URL -->
                 <div class="input-wrapper">
-                    <input type="text"
-                           name="repo_url"
-                           id="repo_url"
-                           placeholder="Enter GitHub repository URL (e.g., https://github.com/user/repo)"
-                           required>
+                    <input type="text" name="repo_url" id="repo_url"
+                        placeholder="Enter GitHub repository URL (e.g., https://github.com/user/repo)" required>
                 </div>
 
                 <!-- Project Intent -->
-                <textarea
-                    name="project_intent"
-                    rows="6"
+                <textarea name="project_intent" rows="6"
                     placeholder="Explain what this repository is about, its goal, and how it is intended to be used..."
-                    style="width:100%; margin-top:16px; padding:16px; border-radius:12px;">
-                </textarea>
-                {% if project_intent_report %}
-                <div class="card">
-                    <h2>🎯 Project Intent vs Reality Report</h2>
-
-                    <h4>✅ Matches</h4>
-                    {% for item in project_intent_report.matches %}
-                    <p>✔ {{ item }}</p>
-                    {% endfor %}
-
-                    <h4 style="margin-top:12px;">⚠ Warnings</h4>
-                    {% for item in project_intent_report.warnings %}
-                    <p>⚠ {{ item }}</p>
-                    {% endfor %}
-
-                    <h4 style="margin-top:12px;">❌ Missing</h4>
-                    {% for item in project_intent_report.missing %}
-                    <p>❌ {{ item }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
+                    style="width:100%; margin-top:16px; padding:16px; border-radius:12px;"></textarea>
 
                 <!-- Submit -->
                 <button type="submit" id="analyzeBtn">
@@ -87,22 +61,95 @@
         {% endif %}
 
         {% if repo_info %}
-        {% if readiness_report %}
-<div class="card">
-    <h2>🚀 Production Readiness</h2>
-
-    <h3>{{ readiness_report.badge }}</h3>
-    <p><strong>Score:</strong> {{ readiness_report.score }} / 100</p>
-
-    <ul>
-        {% for reason in readiness_report.reasons %}
-        <li>✔ {{ reason }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-
         <div class="results">
+
+            <!-- ✅ Diagram Section -->
+            {% if structure_diagram_path or dependency_diagram_path or how_it_works_diagram_path %}
+            <div class="card">
+                <h2><span class="icon">🧩</span> Repository Diagrams</h2>
+
+                <p style="color: var(--color-text-secondary); margin-bottom: 12px;">
+                    Auto-generated visuals for repository structure, dependencies, and system workflow.
+                </p>
+
+                {% if how_it_works_diagram_path %}
+                <div style="margin-top: 18px;">
+                    <h3 style="margin-bottom: 10px;">🧠 How Code Works (Block Diagram)</h3>
+                    <a href="{{ url_for('static', filename=how_it_works_diagram_path) }}" target="_blank" class="btn"
+                        style="display:inline-block; margin-bottom: 12px;">
+                        👁️ View Block Diagram
+                    </a>
+
+                    <img src="{{ url_for('static', filename=how_it_works_diagram_path) }}"
+                        style="width:100%; border-radius:16px; margin-top:12px;">
+                </div>
+                {% endif %}
+
+                {% if structure_diagram_path %}
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 10px;">📂 Structure Diagram</h3>
+                    <a href="{{ url_for('static', filename=structure_diagram_path) }}" target="_blank" class="btn"
+                        style="display:inline-block; margin-bottom: 12px;">
+                        👁️ View Structure Diagram
+                    </a>
+
+                    <img src="{{ url_for('static', filename=structure_diagram_path) }}"
+                        style="width:100%; border-radius:16px; margin-top:12px;">
+                </div>
+                {% endif %}
+
+                {% if dependency_diagram_path %}
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 10px;">🔗 Dependency Diagram</h3>
+                    <a href="{{ url_for('static', filename=dependency_diagram_path) }}" target="_blank" class="btn"
+                        style="display:inline-block; margin-bottom: 12px;">
+                        👁️ View Dependency Diagram
+                    </a>
+
+                    <img src="{{ url_for('static', filename=dependency_diagram_path) }}"
+                        style="width:100%; border-radius:16px; margin-top:12px;">
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- ✅ Production Readiness -->
+            {% if readiness_report %}
+            <div class="card">
+                <h2>🚀 Production Readiness</h2>
+
+                <h3>{{ readiness_report.badge }}</h3>
+                <p><strong>Score:</strong> {{ readiness_report.score }} / 100</p>
+
+                <ul>
+                    {% for reason in readiness_report.reasons %}
+                    <li>✔ {{ reason }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- ✅ Project Intent vs Reality -->
+            {% if project_intent_report %}
+            <div class="card">
+                <h2>🎯 Project Intent vs Reality Report</h2>
+
+                <h4>✅ Matches</h4>
+                {% for item in project_intent_report.matches %}
+                <p>✔ {{ item }}</p>
+                {% endfor %}
+
+                <h4 style="margin-top:12px;">⚠ Warnings</h4>
+                {% for item in project_intent_report.warnings %}
+                <p>⚠ {{ item }}</p>
+                {% endfor %}
+
+                <h4 style="margin-top:12px;">❌ Missing</h4>
+                {% for item in project_intent_report.missing %}
+                <p>❌ {{ item }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <!-- Repository Overview -->
             <div class="card">
@@ -117,39 +164,40 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-item"><div class="stat-label">⭐ Stars</div><div class="stat-value">{{ repo_info.stars }}</div></div>
-                    <div class="stat-item"><div class="stat-label">🍴 Forks</div><div class="stat-value">{{ repo_info.forks }}</div></div>
-                    <div class="stat-item"><div class="stat-label">👁️ Watchers</div><div class="stat-value">{{ repo_info.watchers }}</div></div>
-                    <div class="stat-item"><div class="stat-label">🐛 Issues</div><div class="stat-value">{{ repo_info.open_issues }}</div></div>
-                    <div class="stat-item"><div class="stat-label">💻 Language</div><div class="stat-value">{{ repo_info.language }}</div></div>
-                    <div class="stat-item"><div class="stat-label">📅 Created</div><div class="stat-value">{{ repo_info.created_at }}</div></div>
-                    <div class="stat-item"><div class="stat-label">🔄 Updated</div><div class="stat-value">{{ repo_info.updated_at }}</div></div>
-                    <div class="stat-item"><div class="stat-label">📏 Size</div><div class="stat-value">{{ repo_info.size }} KB</div></div>
+                    <div class="stat-item">
+                        <div class="stat-label">⭐ Stars</div>
+                        <div class="stat-value">{{ repo_info.stars }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">🍴 Forks</div>
+                        <div class="stat-value">{{ repo_info.forks }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">👁️ Watchers</div>
+                        <div class="stat-value">{{ repo_info.watchers }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">🐛 Issues</div>
+                        <div class="stat-value">{{ repo_info.open_issues }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">💻 Language</div>
+                        <div class="stat-value">{{ repo_info.language }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">📅 Created</div>
+                        <div class="stat-value">{{ repo_info.created_at }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">🔄 Updated</div>
+                        <div class="stat-value">{{ repo_info.updated_at }}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">📏 Size</div>
+                        <div class="stat-value">{{ repo_info.size }} KB</div>
+                    </div>
                 </div>
             </div>
-            {% if readiness_report %}
-            <div class="card">
-                <h2>📊 Repository Readiness Score</h2>
-
-                <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 12px;">
-                    {{ readiness_report.score }}/100
-                </div>
-
-                {% for item in readiness_report.details %}
-                <p>• {{ item }}</p>
-                {% endfor %}
-        </div>
-        {% endif %}
-
-            <!-- Project Intent Display -->
-            {% if project_intent %}
-            <div class="card">
-                <h2>🎯 Project Intent Analysis</h2>
-                <p style="white-space: pre-wrap; line-height:1.7; color: var(--color-text-secondary);">
-                    {{ project_intent }}
-                </p>
-            </div>
-            {% endif %}
 
             <!-- Tech Stack -->
             {% if tech_stack %}
@@ -192,6 +240,8 @@
 
         </div>
         {% endif %}
+
+        <!-- PDF Download -->
         <a href="/download-pdf" class="btn" style="margin-top:20px; display:inline-block;">
             📄 Download Analysis Report (PDF)
         </a>
@@ -205,4 +255,5 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

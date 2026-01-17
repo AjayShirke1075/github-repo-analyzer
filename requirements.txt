@@ -1,3 +1,5 @@
 flask
 requests
-pygithub
+PyGithub
+graphviz
+openai
