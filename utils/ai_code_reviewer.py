@@ -1,32 +1,12 @@
-import os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-def review_code_file(filename, code, tech_stack):
-    prompt = f"""
-You are a senior software engineer.
-
-Review the following source code file and provide:
-1. Code quality feedback
-2. Bugs or logical issues
-3. Performance improvements
-4. Security concerns
-5. Best practice suggestions
-
-Technology Stack: {", ".join(tech_stack)}
-
-File Name: {filename}
-
-Code:
-
-Respond in a clear bullet-point format.
+"""
+AI Code Reviewer compatibility wrapper.
+Delegates to unified AI Engine supporting Google Gemini, OpenAI, and deterministic Static Heuristics.
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3
-    )
+from utils.ai_engine import review_code_snippet
 
-    return response.choices[0].message.content.strip()
+def review_code_file(filename, code, tech_stack, api_key=None, provider=None):
+    res = review_code_snippet(filename, code, tech_stack, api_key=api_key, provider=provider)
+    return res.get("content", "")
+
+__all__ = ["review_code_file", "review_code_snippet"]

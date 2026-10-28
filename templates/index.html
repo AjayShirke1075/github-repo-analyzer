@@ -4,16 +4,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="GitHub repository analyzer - Get instant insights and tech stack detection">
-    <title>GitHub Repo Analyzer | Repository Analysis</title>
+    <meta name="description" content="AI-Powered GitHub Repository Analyzer - Architectural Audits, Code Reviews, and Technical Interview Preparation">
+    <title>RepoIntel — AI GitHub Repository Analyzer</title>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Inter + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Marked.js for rich AI Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* Supplemental component styles */
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(79, 156, 249, 0.15);
+            color: #70b4ff;
+            border: 1px solid rgba(79, 156, 249, 0.35);
+            margin-bottom: 12px;
+        }
+
+        .ai-content {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(79, 156, 249, 0.2);
+            border-radius: 14px;
+            padding: 24px;
+            line-height: 1.7;
+            color: #e2e8f0;
+        }
+
+        .ai-content h3, .ai-content h4 {
+            color: #93c5fd;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .ai-content p {
+            margin-bottom: 12px;
+        }
+
+        .ai-content ul {
+            margin-left: 20px;
+            margin-bottom: 14px;
+        }
+
+        .ai-content li {
+            margin-bottom: 6px;
+        }
+
+        .ai-content code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #38bdf8;
+            font-size: 0.9em;
+        }
+
+        .ai-content pre code {
+            display: block;
+            padding: 14px;
+            overflow-x: auto;
+            border-radius: 8px;
+            margin: 12px 0;
+            background: #090d16;
+            border: 1px solid #1e293b;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: rgba(79, 156, 249, 0.2);
+            color: #ffffff;
+            border-color: #4f9cf9;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .readiness-meter {
+            height: 12px;
+            border-radius: 6px;
+            background: #1e293b;
+            overflow: hidden;
+            margin: 14px 0 20px 0;
+        }
+
+        .readiness-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-box {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(79, 156, 249, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #4f9cf9;
+            box-shadow: 0 0 12px rgba(79, 156, 249, 0.3);
+        }
+
+        .chat-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .chat-response {
+            margin-top: 14px;
+            padding: 16px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed rgba(79, 156, 249, 0.3);
+            display: none;
+        }
+
+        .advanced-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .advanced-toggle:hover {
+            color: #60a5fa;
+        }
+
+        .advanced-section {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 
 <body>
@@ -21,239 +216,659 @@
 
         <!-- Header -->
         <header class="header">
-            <h1>⚡ GitHub Repo Analyzer</h1>
-            <p class="subtitle">Professional Repository Intelligence</p>
-            <p class="description">
-                Analyze any GitHub repository instantly. Get comprehensive insights,
-                detailed metrics, and detect tech stacks.
+            <div class="header-inner">
+                <div class="header-brand">
+                    <div class="header-logo">⚡</div>
+                    <span class="header-wordmark">RepoIntel</span>
+                </div>
+                <span class="header-badge">✦ AI-Powered Analysis</span>
+            </div>
+            <h1>GitHub Repository <span class="accent-word">Intelligence</span><br>& Developer Auditor</h1>
+            <p class="header-subtitle">
+                Deep architectural audits, security analysis, and interview prep — powered by Gemini, OpenAI, and a Smart Local Engine.
             </p>
         </header>
 
-        <!-- FORM -->
+        <!-- Form Section -->
         <section class="form-section">
             <form method="POST" id="analyzeForm">
 
                 <!-- Repo URL -->
                 <div class="input-wrapper">
                     <input type="text" name="repo_url" id="repo_url"
-                        placeholder="Enter GitHub repository URL (e.g., https://github.com/user/repo)" required>
+                        value="{{ repo_url }}"
+                        placeholder="Enter GitHub repository URL (e.g., https://github.com/pallets/flask)" required>
                 </div>
 
-                <!-- Project Intent -->
-                <textarea name="project_intent" rows="6"
-                    placeholder="Explain what this repository is about, its goal, and how it is intended to be used..."
-                    style="width:100%; margin-top:16px; padding:16px; border-radius:12px;"></textarea>
+                <!-- Advanced Options Toggle -->
+                <div class="advanced-toggle" id="advancedToggle">
+                    <span id="advancedIcon">⚙</span>
+                    <span>Advanced Settings — AI Model, Project Intent & Resume Matching</span>
+                </div>
 
-                <!-- Submit -->
-                <button type="submit" id="analyzeBtn">
-                    🔍 Analyze Repository
+                <!-- Advanced Options Panel -->
+                <div class="advanced-section" id="advancedSection">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:16px;">
+                        <div>
+                            <label class="form-label">AI Provider Engine</label>
+                            <select name="ai_provider" id="ai_provider">
+                                <option value="auto" {% if ai_provider == 'auto' %}selected{% endif %}>Auto — Gemini / OpenAI / Smart Local</option>
+                                <option value="gemini" {% if ai_provider == 'gemini' %}selected{% endif %}>Google Gemini 1.5 Flash</option>
+                                <option value="openai" {% if ai_provider == 'openai' %}selected{% endif %}>OpenAI GPT-4o-mini</option>
+                                <option value="smart_local" {% if ai_provider == 'smart_local' %}selected{% endif %}>Smart Local Engine (Offline)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">API Key — Optional</label>
+                            <input type="password" name="api_key" value="{{ custom_api_key }}" placeholder="AIzaSy... or sk-...">
+                        </div>
+                        <div>
+                            <label class="form-label">GitHub Token — Optional</label>
+                            <input type="password" name="github_token" placeholder="ghp_...  (raises rate limit to 5,000/hr)">
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="form-label">Project Intent — for Intent vs. Reality Audit</label>
+                        <textarea name="project_intent" rows="3"
+                            placeholder="Describe what this repository claims to do and its architectural goals...">{{ project_intent_text }}</textarea>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label class="form-label">Resume or Job Description — for Skills Match</label>
+                        <textarea name="resume_text" rows="3"
+                            placeholder="Paste your resume or a job description to evaluate skills alignment...">{{ resume_text }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="analyzeBtn" style="margin-top:12px;">
+                    Run Comprehensive AI Audit
                 </button>
 
             </form>
         </section>
 
-        <!-- Error -->
+        <!-- Error Alert -->
         {% if error_message %}
-        <div class="card" style="border-color: var(--color-danger); background: rgba(239,68,68,0.1);">
-            <h2>⚠️ Error</h2>
-            <p>{{ error_message }}</p>
+        <div class="error-box" style="margin-top:16px;">
+            <span>⚠</span>
+            <span>{{ error_message }}</span>
         </div>
         {% endif %}
 
         {% if repo_info %}
         <div class="results">
 
-            <!-- ✅ Diagram Section -->
-            {% if structure_diagram_path or dependency_diagram_path or how_it_works_diagram_path %}
-            <div class="card">
-                <h2><span class="icon">🧩</span> Repository Diagrams</h2>
-
-                <p style="color: var(--color-text-secondary); margin-bottom: 12px;">
-                    Auto-generated visuals for repository structure, dependencies, and system workflow.
-                </p>
-
-                {% if how_it_works_diagram_path %}
-                <div style="margin-top: 18px;">
-                    <h3 style="margin-bottom: 10px;">🧠 How Code Works (Block Diagram)</h3>
-                    <a href="{{ url_for('static', filename=how_it_works_diagram_path) }}" target="_blank" class="btn"
-                        style="display:inline-block; margin-bottom: 12px;">
-                        👁️ View Block Diagram
-                    </a>
-
-                    <img src="{{ url_for('static', filename=how_it_works_diagram_path) }}"
-                        style="width:100%; border-radius:16px; margin-top:12px;">
+            <!-- Repo Action Bar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding:14px 20px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:var(--r-xl);">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    {% if repo_info.avatar_url %}
+                    <img src="{{ repo_info.avatar_url }}" class="repo-avatar" style="width:42px; height:42px;">
+                    {% endif %}
+                    <div>
+                        <div style="font-size:1rem; font-weight:700; color:var(--text-primary); letter-spacing:-0.01em;">{{ repo_info.name }}</div>
+                        <div style="font-size:0.78rem; color:var(--text-tertiary); margin-top:2px; font-family:var(--font-mono);">{{ repo_info.language }} &nbsp;·&nbsp; {{ "{:,}".format(repo_info.stars) }} stars &nbsp;·&nbsp; {{ "{:,}".format(repo_info.forks) }} forks</div>
+                    </div>
                 </div>
-                {% endif %}
-
-                {% if structure_diagram_path %}
-                <div style="margin-top: 24px;">
-                    <h3 style="margin-bottom: 10px;">📂 Structure Diagram</h3>
-                    <a href="{{ url_for('static', filename=structure_diagram_path) }}" target="_blank" class="btn"
-                        style="display:inline-block; margin-bottom: 12px;">
-                        👁️ View Structure Diagram
+                <div class="repo-actions">
+                    <a href="/download-pdf" class="btn" style="font-size:0.82rem; padding:8px 16px; background:linear-gradient(135deg,#16a34a,#15803d); border-color:rgba(22,163,74,0.4);">
+                        ↓ Download PDF Report
                     </a>
-
-                    <img src="{{ url_for('static', filename=structure_diagram_path) }}"
-                        style="width:100%; border-radius:16px; margin-top:12px;">
+                    <a href="https://github.com/{{ repo_info.name }}" target="_blank" class="btn btn-ghost" style="font-size:0.82rem; padding:8px 16px;">
+                        ↗ View on GitHub
+                    </a>
                 </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tabs-container">
+                <button class="tab-btn active" onclick="switchTab('tab-ai-audit')">AI Audit</button>
+                <button class="tab-btn" onclick="switchTab('tab-interview')">Interview Q&A</button>
+                <button class="tab-btn" onclick="switchTab('tab-code-review')">Code Review</button>
+                <button class="tab-btn" onclick="switchTab('tab-readiness')">Readiness</button>
+                <button class="tab-btn" onclick="switchTab('tab-overview')">Metrics</button>
+                <button class="tab-btn" onclick="switchTab('tab-diagrams')">Diagrams</button>
+                {% if project_intent_report %}
+                <button class="tab-btn" onclick="switchTab('tab-intent')">Intent Audit</button>
                 {% endif %}
+                {% if resume_report %}
+                <button class="tab-btn" onclick="switchTab('tab-resume')">Resume Fit</button>
+                {% endif %}
+                <button class="tab-btn" onclick="switchTab('tab-chat')">AI Chat</button>
+            </div>
 
-                {% if dependency_diagram_path %}
-                <div style="margin-top: 24px;">
-                    <h3 style="margin-bottom: 10px;">🔗 Dependency Diagram</h3>
-                    <a href="{{ url_for('static', filename=dependency_diagram_path) }}" target="_blank" class="btn"
-                        style="display:inline-block; margin-bottom: 12px;">
-                        👁️ View Dependency Diagram
-                    </a>
+            <!-- TAB 1: AI Architectural Audit -->
+            <div id="tab-ai-audit" class="tab-panel active">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F916;</div>
+                        <h2>AI Architectural &amp; Code Quality Audit</h2>
+                        {% if ai_suggestions %}
+                        <span class="ai-badge" style="margin-left:auto; margin-bottom:0;">{{ ai_suggestions.source }}</span>
+                        {% endif %}
+                    </div>
+                    {% if ai_suggestions %}
+                    <div class="ai-content markdown-render" data-content="{{ ai_suggestions.content | e }}">
+                        {{ ai_suggestions.content }}
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-tertiary); font-size:0.875rem;">No architectural audit generated.</p>
+                    {% endif %}
+                </div>
+            </div>
 
-                    <img src="{{ url_for('static', filename=dependency_diagram_path) }}"
-                        style="width:100%; border-radius:16px; margin-top:12px;">
+            <!-- TAB 2: Technical Interview Q&A -->
+            <div id="tab-interview" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F3AF;</div>
+                        <h2>Technical Interview Preparation</h2>
+                        {% if interview_qa %}
+                        <span class="ai-badge" style="margin-left:auto; margin-bottom:0;">{{ interview_qa.source }}</span>
+                        {% endif %}
+                    </div>
+                    <p style="color:var(--text-tertiary); font-size:0.875rem; margin-bottom:16px;">
+                        Questions and model answers custom-generated for <strong style="color:var(--text-primary);">{{ repo_info.name }}</strong> to demonstrate senior-level technical depth.
+                    </p>
+                    {% if interview_qa %}
+                    <div class="ai-content markdown-render" data-content="{{ interview_qa.content | e }}">
+                        {{ interview_qa.content }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- TAB 3: Code Review -->
+            <div id="tab-code-review" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F6E1;</div>
+                        <h2>Automated Code &amp; Security Review</h2>
+                        {% if ai_code_review %}
+                        <span class="ai-badge" style="margin-left:auto; margin-bottom:0;">{{ ai_code_review.source }}</span>
+                        {% endif %}
+                    </div>
+                    {% if ai_code_review %}
+                    <p style="color:var(--text-tertiary); font-size:0.82rem; margin-bottom:12px; font-family:var(--font-mono);">
+                        Reviewing: <code>{{ ai_code_review.filename }}</code>
+                    </p>
+                    <div class="ai-content markdown-render" data-content="{{ ai_code_review.content | e }}">
+                        {{ ai_code_review.content }}
+                    </div>
+                    {% else %}
+                    <p style="color:var(--text-tertiary); font-size:0.875rem;">No inspectable entrypoint file located for direct code review.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- TAB 4: Production Readiness -->
+            <div id="tab-readiness" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F680;</div>
+                        <h2>Production Readiness &amp; Quality Gates</h2>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:0.95rem; font-weight:600; color:var(--text-primary);">{{ readiness_report.badge }}</span>
+                        <span style="font-size:1.6rem; font-weight:700; color:var(--accent-hover); font-feature-settings:'tnum';">{{ readiness_report.score }}<span style="font-size:1rem; color:var(--text-tertiary); font-weight:500;"> / 100</span></span>
+                    </div>
+
+                    <div class="readiness-meter">
+                        <div class="readiness-fill" style="width: {{ readiness_report.score }}%;"></div>
+                    </div>
+
+                    <p style="font-size:0.75rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Engineering Criteria</p>
+                    <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:6px;">
+                        {% for reason in readiness_report.reasons %}
+                        <li style="padding:8px 14px; background:var(--bg-elevated); border-radius:var(--r-md); border-left:2px solid {% if 'present' in reason or 'detected' in reason or 'identified' in reason %}var(--green){% else %}var(--yellow){% endif %}; font-size:0.875rem; color:var(--text-secondary);">
+                            {% if 'present' in reason or 'detected' in reason or 'identified' in reason %}✓{% else %}○{% endif %}
+                            &nbsp;{{ reason }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TAB 5: Metrics & Tech Stack -->
+            <div id="tab-overview" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F4CA;</div>
+                        <h2>Repository Metrics</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Stars</div>
+                            <div class="stat-value">{{ "{:,}".format(repo_info.stars) }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Forks</div>
+                            <div class="stat-value">{{ "{:,}".format(repo_info.forks) }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Watchers</div>
+                            <div class="stat-value">{{ "{:,}".format(repo_info.watchers) }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Open Issues</div>
+                            <div class="stat-value">{{ repo_info.open_issues }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Language</div>
+                            <div class="stat-value" style="font-size:1.1rem;">{{ repo_info.language }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">License</div>
+                            <div class="stat-value" style="font-size:1rem;">{{ repo_info.license }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Created</div>
+                            <div class="stat-value" style="font-size:0.9rem;">{{ repo_info.created_at }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Last Updated</div>
+                            <div class="stat-value" style="font-size:0.9rem;">{{ repo_info.updated_at }}</div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Tech Stack -->
+                {% if tech_stack %}
+                <div class="card" style="margin-top:16px;">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F6E0;</div>
+                        <h2>Technology Stack &mdash; {{ tech_stack | length }} detected</h2>
+                    </div>
+                    <div class="tech-grid">
+                        {% for tech in tech_stack %}
+                        <div class="tech-item">
+                            <span class="tech-icon">
+                                {% if "Python" in tech %}&#x1F40D;
+                                {% elif "JavaScript" in tech or "TypeScript" in tech %}&#x26A1;
+                                {% elif "React" in tech or "Vue" in tech %}&#x269B;
+                                {% elif "Docker" in tech %}&#x1F433;
+                                {% elif "pip" in tech or "Node" in tech %}&#x1F4E6;
+                                {% elif "HTML" in tech or "CSS" in tech %}&#x1F3A8;
+                                {% elif "Go" in tech %}&#x1F418;
+                                {% elif "Rust" in tech %}&#x1F980;
+                                {% elif "Java" in tech %}&#x2615;
+                                {% else %}&#x2699;
+                                {% endif %}
+                            </span>
+                            <span class="tech-name">{{ tech }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 {% endif %}
             </div>
-            {% endif %}
 
-            <!-- ✅ Production Readiness -->
-            {% if readiness_report %}
-            <div class="card">
-                <h2>🚀 Production Readiness</h2>
+            <!-- TAB 6: System Diagrams -->
+            <div id="tab-diagrams" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F5FA;</div>
+                        <h2>System Architecture Diagrams</h2>
+                    </div>
+                    <p style="color:var(--text-tertiary); font-size:0.875rem; margin-bottom:var(--sp-6);">
+                        Automatically generated structural graphs, dependency trees, and workflow pipelines.
+                    </p>
 
-                <h3>{{ readiness_report.badge }}</h3>
-                <p><strong>Score:</strong> {{ readiness_report.score }} / 100</p>
+                    {% if how_it_works_diagram_path %}
+                    <div style="margin-bottom:var(--sp-8);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3);">
+                            <p style="font-size:0.78rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin:0;">Architecture Workflow Pipeline</p>
+                            <a href="{{ url_for('static', filename=how_it_works_diagram_path) }}" target="_blank" class="btn btn-ghost" style="padding:5px 12px; font-size:0.78rem;">Open fullscreen</a>
+                        </div>
+                        <div class="diagram-container">
+                            <img src="{{ url_for('static', filename=how_it_works_diagram_path) }}" alt="Architecture diagram">
+                        </div>
+                    </div>
+                    {% endif %}
 
-                <ul>
-                    {% for reason in readiness_report.reasons %}
-                    <li>✔ {{ reason }}</li>
-                    {% endfor %}
-                </ul>
+                    {% if dependency_diagram_path %}
+                    <div style="margin-bottom:var(--sp-8);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3);">
+                            <p style="font-size:0.78rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin:0;">Module &amp; Dependency Graph</p>
+                            <a href="{{ url_for('static', filename=dependency_diagram_path) }}" target="_blank" class="btn btn-ghost" style="padding:5px 12px; font-size:0.78rem;">Open fullscreen</a>
+                        </div>
+                        <div class="diagram-container">
+                            <img src="{{ url_for('static', filename=dependency_diagram_path) }}" alt="Dependency graph">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if structure_diagram_path %}
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3);">
+                            <p style="font-size:0.78rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin:0;">File Hierarchy Tree</p>
+                            <a href="{{ url_for('static', filename=structure_diagram_path) }}" target="_blank" class="btn btn-ghost" style="padding:5px 12px; font-size:0.78rem;">Open fullscreen</a>
+                        </div>
+                        <div class="diagram-container">
+                            <img src="{{ url_for('static', filename=structure_diagram_path) }}" alt="File structure">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            {% endif %}
 
-            <!-- ✅ Project Intent vs Reality -->
+            <!-- TAB 7: Project Intent vs Reality -->
             {% if project_intent_report %}
-            <div class="card">
-                <h2>🎯 Project Intent vs Reality Report</h2>
+            <div id="tab-intent" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F3AF;</div>
+                        <h2>Project Intent vs. Reality Audit</h2>
+                        <span class="badge badge-primary" style="margin-left:auto;">{{ project_intent_report.score }}% Alignment</span>
+                    </div>
 
-                <h4>✅ Matches</h4>
-                {% for item in project_intent_report.matches %}
-                <p>✔ {{ item }}</p>
-                {% endfor %}
-
-                <h4 style="margin-top:12px;">⚠ Warnings</h4>
-                {% for item in project_intent_report.warnings %}
-                <p>⚠ {{ item }}</p>
-                {% endfor %}
-
-                <h4 style="margin-top:12px;">❌ Missing</h4>
-                {% for item in project_intent_report.missing %}
-                <p>❌ {{ item }}</p>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <!-- Repository Overview -->
-            <div class="card">
-                <h2>📊 Repository Overview</h2>
-
-                <div class="repo-header">
-                    <img src="{{ repo_info.avatar_url }}" class="repo-avatar">
-                    <div class="repo-title">
-                        <h3>{{ repo_info.name }}</h3>
-                        <p>{{ repo_info.description }}</p>
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-label">⭐ Stars</div>
-                        <div class="stat-value">{{ repo_info.stars }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">🍴 Forks</div>
-                        <div class="stat-value">{{ repo_info.forks }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">👁️ Watchers</div>
-                        <div class="stat-value">{{ repo_info.watchers }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">🐛 Issues</div>
-                        <div class="stat-value">{{ repo_info.open_issues }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">💻 Language</div>
-                        <div class="stat-value">{{ repo_info.language }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">📅 Created</div>
-                        <div class="stat-value">{{ repo_info.created_at }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">🔄 Updated</div>
-                        <div class="stat-value">{{ repo_info.updated_at }}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">📏 Size</div>
-                        <div class="stat-value">{{ repo_info.size }} KB</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tech Stack -->
-            {% if tech_stack %}
-            <div class="card">
-                <h2>🛠️ Detected Tech Stack</h2>
-                <div class="tech-grid">
-                    {% for tech in tech_stack %}
-                    <div class="tech-item">
-                        <div class="tech-icon">
-                            {% if tech == "Python" %}🐍
-                            {% elif "pip" in tech %}📦
-                            {% elif "Docker" in tech %}🐳
-                            {% elif "Git" in tech %}🔧
-                            {% elif "API" in tech %}🔌
-                            {% else %}⚙️
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top:8px;">
+                        <div style="padding:var(--sp-5); background:var(--green-dim); border:1px solid var(--green-border); border-radius:var(--r-lg);">
+                            <p style="font-size:0.72rem; font-weight:600; color:var(--green); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--sp-3);">Confirmed Matches</p>
+                            {% for item in project_intent_report.matches %}
+                            <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:var(--sp-2);">&#x2713; {{ item }}</p>
+                            {% endfor %}
+                        </div>
+                        <div style="padding:var(--sp-5); background:var(--yellow-dim); border:1px solid rgba(234,179,8,0.25); border-radius:var(--r-lg);">
+                            <p style="font-size:0.72rem; font-weight:600; color:var(--yellow); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--sp-3);">Architectural Warnings</p>
+                            {% for item in project_intent_report.warnings %}
+                            <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:var(--sp-2);">&#x25B3; {{ item }}</p>
+                            {% endfor %}
+                            {% if not project_intent_report.warnings %}
+                            <p style="font-size:0.875rem; color:var(--text-tertiary);">No discrepancies detected.</p>
                             {% endif %}
                         </div>
-                        <div class="tech-name">{{ tech }}</div>
+                        <div style="padding:var(--sp-5); background:var(--red-dim); border:1px solid rgba(239,68,68,0.25); border-radius:var(--r-lg);">
+                            <p style="font-size:0.72rem; font-weight:600; color:var(--red); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--sp-3);">Missing Modules</p>
+                            {% for item in project_intent_report.missing %}
+                            <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:var(--sp-2);">&#x25A1; {{ item }}</p>
+                            {% endfor %}
+                            {% if not project_intent_report.missing %}
+                            <p style="font-size:0.875rem; color:var(--text-tertiary);">All claimed modules accounted for.</p>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
             {% endif %}
 
-            <!-- AI Suggestions -->
-            {% if ai_suggestions %}
-            <div class="card">
-                <h2>🤖 AI-Powered Suggestions</h2>
-                <div style="
-                    background: rgba(59,130,246,0.08);
-                    border: 1px solid rgba(59,130,246,0.25);
-                    border-radius: 12px;
-                    padding: 20px;
-                    white-space: pre-wrap;
-                ">
-                    {{ ai_suggestions }}
+            <!-- TAB 8: Resume & Job Fit Matcher -->
+            {% if resume_report %}
+            <div id="tab-resume" class="tab-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">&#x1F4BC;</div>
+                        <h2>Resume &amp; Job Fit Matcher</h2>
+                        <span class="badge badge-success" style="margin-left:auto;">{{ resume_report.score }}% Match</span>
+                    </div>
+
+                    <div style="margin-bottom:var(--sp-5);">
+                        <p style="font-size:0.72rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--sp-3);">Skills Proven in Repository</p>
+                        <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap;">
+                            {% for skill in resume_report.matched_skills %}
+                            <span class="badge badge-success">&#x2713; {{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div style="margin-top:var(--sp-5);">
+                        <p style="font-size:0.72rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--sp-3);">Suggested Interview Pitch</p>
+                        <div class="ai-content markdown-render" data-content="{{ resume_report.interview_pitch | e }}">
+                            {{ resume_report.interview_pitch }}
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endif %}
+
+            <!-- TAB 9: Interactive AI Chat -->
+            <div id="tab-chat" class="tab-panel">
+                <div class="card">
+                    <div class="card-header" style="margin-bottom:var(--sp-4);">
+                        <div class="card-icon">&#x1F4AC;</div>
+                        <h2>Interactive AI Codebase Assistant</h2>
+                        <button type="button" class="btn btn-ghost" onclick="clearChatThread()" style="margin-left:auto; padding:5px 12px; font-size:0.78rem;">Clear chat</button>
+                    </div>
+                    <p style="color:var(--text-tertiary); font-size:0.875rem; margin-bottom:var(--sp-5);">
+                        Ask any technical question about <strong style="color:var(--text-primary);">{{ repo_info.name }}</strong> &mdash; architecture, security, performance, dependencies, or testing.
+                    </p>
+
+                    <!-- Quick Prompt Chips -->
+                    <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-bottom:var(--sp-5); align-items:center;">
+                        <span style="font-size:0.72rem; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em;">Quick prompts</span>
+                        <button type="button" class="tab-btn" onclick="triggerQuickPrompt('Explain the system architecture and design patterns used in this repository.')">Architecture</button>
+                        <button type="button" class="tab-btn" onclick="triggerQuickPrompt('What are the main security vulnerabilities and authentication considerations?')">Security</button>
+                        <button type="button" class="tab-btn" onclick="triggerQuickPrompt('Where are the primary performance bottlenecks and how would you scale this 10x?')">Scalability</button>
+                        <button type="button" class="tab-btn" onclick="triggerQuickPrompt('How is automated testing structured and how do I run tests?')">Testing</button>
+                        <button type="button" class="tab-btn" onclick="triggerQuickPrompt('How do I install, configure dependencies, and run this project locally?')">Setup</button>
+                    </div>
+
+                    <!-- Conversation Thread -->
+                    <div id="chatThread" style="max-height:420px; overflow-y:auto; padding:var(--sp-5); background:var(--bg-base); border:1px solid var(--border-dim); border-radius:var(--r-lg); margin-bottom:var(--sp-4); display:flex; flex-direction:column; gap:var(--sp-4);">
+                        <div style="display:flex; gap:var(--sp-3); align-items:flex-start;">
+                            <div style="width:28px; height:28px; border-radius:var(--r-md); background:var(--grad-accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; border:1px solid rgba(59,130,246,0.4);">&#x1F916;</div>
+                            <div style="background:var(--bg-elevated); border:1px solid var(--border-dim); border-radius:var(--r-lg); padding:var(--sp-4) var(--sp-5); color:var(--text-secondary); font-size:0.875rem; line-height:1.65; max-width:88%;">
+                                Codebase assistant ready for <strong style="color:var(--text-primary);">{{ repo_info.name }}</strong>. Ask about architecture, security, performance, dependencies, testing strategy, or setup instructions.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-box">
+                        <input type="text" id="chatQuestion" class="chat-input" placeholder="Ask a technical question and press Enter..." autocomplete="off">
+                        <button type="button" id="chatSendBtn" class="chat-btn" onclick="askAiQuestion()">Send</button>
+                    </div>
+                </div>
+            </div>
 
         </div>
         {% endif %}
 
-        <!-- PDF Download -->
-        <a href="/download-pdf" class="btn" style="margin-top:20px; display:inline-block;">
-            📄 Download Analysis Report (PDF)
-        </a>
-
         <!-- Footer -->
         <footer class="footer">
-            <p>Built with ❤️ using Flask</p>
+            <p>RepoIntel &mdash; Built with Flask, PyGithub &amp; Multi-Model AI (Gemini / OpenAI / Smart Engine)</p>
+            <p style="margin-top:6px;"><a href="https://github.com" target="_blank">GitHub</a> &nbsp;&middot;&nbsp; <a href="/download-pdf">Download Report</a></p>
         </footer>
 
     </div>
 
+    <!-- Script -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Advanced Toggle
+        const toggleBtn = document.getElementById('advancedToggle');
+        const advancedSec = document.getElementById('advancedSection');
+        if (toggleBtn && advancedSec) {
+            toggleBtn.addEventListener('click', function() {
+                const isHidden = advancedSec.style.display === 'none' || !advancedSec.style.display;
+                advancedSec.style.display = isHidden ? 'block' : 'none';
+                document.getElementById('advancedIcon').textContent = isHidden ? '🔼' : '⚙️';
+            });
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(
+                btn => btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)
+            );
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+
+        // Render Markdown on Elements
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.markdown-render').forEach(el => {
+                const raw = el.getAttribute('data-content');
+                if (raw && typeof marked !== 'undefined') {
+                    try {
+                        el.innerHTML = marked.parse(raw);
+                    } catch (e) {
+                        console.warn("Markdown parse notice:", e);
+                    }
+                }
+            });
+        });
+
+        // Interactive AI Chat System
+        let chatHistory = [];
+
+        function triggerQuickPrompt(promptText) {
+            const input = document.getElementById('chatQuestion');
+            if (input) {
+                input.value = promptText;
+                askAiQuestion();
+            }
+        }
+
+        function clearChatThread() {
+            const thread = document.getElementById('chatThread');
+            if (thread) {
+                chatHistory = [];
+                thread.innerHTML = `
+                    <div style="display:flex; gap:10px; align-items:flex-start;">
+                        <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; align-items:center; justify-content:center; flex-shrink:0;">🤖</div>
+                        <div style="background:rgba(26,26,38,0.85); border:1px solid rgba(79,156,249,0.25); border-radius:12px; padding:14px 18px; color:#e2e8f0; font-size:0.92rem; line-height:1.6; max-width:90%;">
+                            Chat conversation cleared. What other technical aspects of this codebase can I explain?
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function askAiQuestion() {
+            const input = document.getElementById('chatQuestion');
+            const sendBtn = document.getElementById('chatSendBtn');
+            const thread = document.getElementById('chatThread');
+            const q = input ? input.value.trim() : "";
+            if (!q || !thread) return;
+
+            // Clear input & set button loading
+            input.value = "";
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.style.opacity = "0.6";
+                sendBtn.textContent = "Thinking...";
+            }
+
+            // Append User Bubble
+            const userBubble = document.createElement('div');
+            userBubble.style.cssText = "display:flex; justify-content:flex-end;";
+            userBubble.innerHTML = `
+                <div style="background:linear-gradient(135deg, #2563eb, #7c3aed); border-radius:12px; padding:10px 16px; color:#ffffff; font-size:0.92rem; max-width:85%; word-break:break-word; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+                    ${q.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
+                </div>
+            `;
+            thread.appendChild(userBubble);
+
+            // Append Loading Bubble
+            const loadingBubble = document.createElement('div');
+            loadingBubble.id = "chatLoadingMsg";
+            loadingBubble.style.cssText = "display:flex; gap:10px; align-items:flex-start;";
+            loadingBubble.innerHTML = `
+                <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; align-items:center; justify-content:center; flex-shrink:0;">🤖</div>
+                <div style="background:rgba(26,26,38,0.85); border:1px solid rgba(79,156,249,0.25); border-radius:12px; padding:12px 16px; color:#93c5fd; font-size:0.88rem;">
+                    <em>AI Assistant is analyzing codebase & reasoning...</em>
+                </div>
+            `;
+            thread.appendChild(loadingBubble);
+            thread.scrollTop = thread.scrollHeight;
+
+            // Extract API key and provider from page inputs if entered
+            const apiKeyInput = document.querySelector('input[name="api_key"]');
+            const providerSelect = document.querySelector('select[name="ai_provider"]');
+            const customApiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
+            const customProvider = providerSelect ? providerSelect.value.trim() : "auto";
+
+            fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: q,
+                    history: chatHistory,
+                    api_key: customApiKey,
+                    provider: customProvider
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const loader = document.getElementById("chatLoadingMsg");
+                if (loader) loader.remove();
+
+                const aiBubble = document.createElement('div');
+                aiBubble.style.cssText = "display:flex; gap:10px; align-items:flex-start;";
+
+                let renderedAnswer = "";
+                if (data.error) {
+                    renderedAnswer = `<span style="color:#f87171;">⚠️ ${data.error}</span>`;
+                } else {
+                    const rawAnswer = data.answer || "No response received.";
+                    renderedAnswer = (typeof marked !== 'undefined') ? marked.parse(rawAnswer) : rawAnswer.replace(/\n/g, "<br>");
+                    chatHistory.push({ role: "user", content: q });
+                    chatHistory.push({ role: "assistant", content: rawAnswer });
+                }
+
+                const sourceBadge = data.source ? `<span style="font-size:0.75rem; color:#60a5fa; background:rgba(59,130,246,0.15); padding:2px 8px; border-radius:999px; margin-left:8px; border:1px solid rgba(59,130,246,0.3);">${data.source}</span>` : "";
+
+                aiBubble.innerHTML = `
+                    <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #3b82f6, #8b5cf6); display:flex; align-items:center; justify-content:center; flex-shrink:0;">🤖</div>
+                    <div style="background:rgba(26,26,38,0.92); border:1px solid rgba(79,156,249,0.3); border-radius:12px; padding:16px 20px; color:#e2e8f0; font-size:0.92rem; line-height:1.65; max-width:90%; overflow-x:auto;">
+                        <div style="margin-bottom:8px; font-weight:700; color:#38bdf8; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                            <span>AI Lead Architect</span> ${sourceBadge}
+                        </div>
+                        <div class="ai-content-inner" style="color:#cbd5e1;">${renderedAnswer}</div>
+                    </div>
+                `;
+                thread.appendChild(aiBubble);
+                thread.scrollTop = thread.scrollHeight;
+            })
+            .catch(err => {
+                const loader = document.getElementById("chatLoadingMsg");
+                if (loader) loader.remove();
+
+                const errBubble = document.createElement('div');
+                errBubble.style.cssText = "display:flex; gap:10px; align-items:flex-start;";
+                errBubble.innerHTML = `
+                    <div style="width:34px; height:34px; border-radius:50%; background:#ef4444; display:flex; align-items:center; justify-content:center; flex-shrink:0;">⚠️</div>
+                    <div style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; border-radius:12px; padding:12px 16px; color:#fca5a5; font-size:0.88rem;">
+                        Network error connecting to AI assistant: ${err}
+                    </div>
+                `;
+                thread.appendChild(errBubble);
+                thread.scrollTop = thread.scrollHeight;
+            })
+            .finally(() => {
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.style.opacity = "1";
+                    sendBtn.textContent = "Send 💬";
+                }
+                if (input) input.focus();
+            });
+        }
+
+        // Attach Enter Key Handler to Chat Input
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chatQuestion');
+            if (chatInput) {
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        askAiQuestion();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

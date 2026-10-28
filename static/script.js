@@ -182,26 +182,20 @@ function initializeInteractiveElements() {
         });
     });
     
-    // Add premium animation to cards on scroll
+    // Add gentle fade-in animation to cards when visible
     const cardObserver = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0) scale(1)';
-                entry.target.style.filter = 'blur(0px)';
-            } else {
-                entry.target.style.opacity = '0.3';
-                entry.target.style.transform = 'translateY(20px) scale(0.98)';
-                entry.target.style.filter = 'blur(2px)';
+                entry.target.style.filter = 'none';
             }
         });
     }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
+        threshold: 0.05
     });
     
     document.querySelectorAll('.card').forEach(card => {
-        card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
         cardObserver.observe(card);
     });
 }
